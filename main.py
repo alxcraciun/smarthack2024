@@ -1,4 +1,6 @@
 # Aici faci tu Stefan structura de date
+import copy
+
 from data import DataLoader
 
 
@@ -33,21 +35,51 @@ def prelucrare_date():
 class Rute(object):
     instance = None
 
+    def __init__(self):
+        self.drumuri = {}
+        self.__calculeaza()
+
+    def cauta_drumuri(self, from_id, drum_curent, vizitat, connections):
+        stack = [(from_id, drum_curent[:])]
+
+        while stack:
+            current_id, current_path = stack.pop()
+            if current_id in vizitat:
+                continue
+
+            vizitat.add(current_id)
+
+            # Adăugăm drumul curent pentru clienți
+            if current_id in drumuri:
+                self.drumuri[current_id].append(copy.deepcopy(current_path))
+
+            for (src, dest, connection_type), conn in connections.items():
+                if src == current_id and dest not in vizitat:
+                    current_path.append(conn)
+                    stack.append((dest, copy.deepcopy(current_path)))
+                    current_path.pop()  # backtrack
+
+            vizitat.remove(current_id)
+
     def __calculeaza(self):
-        drumuri = dict()
-        # code !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # Cred ca e mai bine sa pornesti cu cautarea din rafinarii si cand ajungi la un client
-        # sa dai drumuri[client].append(drum_curent)
-        self.drumuri = drumuri
+        data = DataLoader()
+        connections = data.load_connections()
+        customers = data.load_customers()
+        refineries = data.load_refineries()
+
+        self.drumuri = {customer.id: [] for customer in customers}
+
+        for refinery in refineries:
+            self.cauta_drumuri(refinery.id, [], set(), connections)
 
     def __new__(cls):
-        if not hasattr(cls, 'instance'):
+        if not cls.instance:
             cls.instance = super(Rute, cls).__new__(cls)
-            cls.instance.__calculeaza()
         return cls.instance
 
-    def get_drumuri(self):
-        return self.drumuri
+    # def get_drumuri(self,customer):
+    #     self.__calculeaza(customer)
+    #     return self.drumuri
 
 
 class Configuratie(object):
@@ -226,7 +258,7 @@ def day(zi, events):
         penalty_late_client = Configuratie().get_conf()[0]["customers"][customer].late_delivery_penalty
         while cnt > 0:
             Y=[]
-            for drum in Rute().get_drumuri()[customer]:
+            for drum in Rute().get_drumuri(customer):
                 for i in range(zi+1,43):
                     Y.append(cap_drum_legal(drum,i,start,end,penalty_early_client,penalty_late_client))
                     Y.append(cap_drum_illegal(drum,i,start,end,penalty_early_client,penalty_late_client,cnt))
@@ -237,4 +269,13 @@ def day(zi, events):
 
 
 
+
+# Creează instanța singleton și afișează drumurile
+rute_instance = Rute()
+drumuri = rute_instance.drumuri
+
+# Afișează drumurile de la rafinării la fiecare client
+print("Drumurile de la rafinării la fiecare client:")
+for client_id, trasee in drumuri.items():
+    print(f"Client {client_id}: Trasee - {trasee}")
 
