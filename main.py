@@ -1,4 +1,7 @@
 # Aici faci tu Stefan structura de date
+from data import DataLoader
+
+
 class Action:
     def __init__(self, pipe, cantitate):
         self.pipe = pipe
@@ -16,16 +19,25 @@ class Actions:
     def adauga(self, action,zi):
         self.liste[zi].append(action)
 
-    def obtine_zi(self,zi):
+    def obtine_zi(self, zi):
         return self.liste[zi]
+
+
+def prelucrare_date():
+    data = DataLoader()
+    customers = data.load_customers()
+
 
 
 # Clasa singleton care contine toate trasele client<->rafinarie
 class Rute(object):
     instance = None
+
     def __calculeaza(self):
         drumuri = dict()
-        # code
+        # code !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Cred ca e mai bine sa pornesti cu cautarea din rafinarii si cand ajungi la un client
+        # sa dai drumuri[client].append(drum_curent)
         self.drumuri = drumuri
 
     def __new__(cls):
