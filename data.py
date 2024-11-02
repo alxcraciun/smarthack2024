@@ -1,5 +1,3 @@
-# Aici bag eu importul la CSV
-
 import pandas as pd
 from dataclasses import dataclass
 from typing import List
@@ -16,27 +14,6 @@ class NodeType(Enum):
 class ConnectionType(Enum):
     PIPELINE = "PIPELINE"
     TRUCK = "TRUCK"
-
-
-@dataclass
-class TransportConfig:
-    costPerDistanceAndVolume: float
-    co2PerDistanceAndVolume: float
-    overUsePenaltyPerVolume: float
-
-
-class TransportConfigs:
-    PIPELINE = TransportConfig(
-        costPerDistanceAndVolume=0.05,
-        co2PerDistanceAndVolume=0.02,
-        overUsePenaltyPerVolume=1.13
-    )
-
-    TRUCK = TransportConfig(
-        costPerDistanceAndVolume=0.42,
-        co2PerDistanceAndVolume=0.31,
-        overUsePenaltyPerVolume=0.73
-    )
 
 
 @dataclass
@@ -69,6 +46,19 @@ class Connection:
     lead_time_days: int
     connection_type: ConnectionType
     max_capacity: int
+    costPerDistanceAndVolume: float = 0.0
+    co2PerDistanceAndVolume: float = 0.0
+    overUsePenaltyPerVolume: float = 0.0
+
+    def __post_init__(self):
+        if self.connection_type == ConnectionType.PIPELINE:
+            self.costPerDistanceAndVolume = 0.05
+            self.co2PerDistanceAndVolume = 0.02
+            self.overUsePenaltyPerVolume = 1.13
+        elif self.connection_type == ConnectionType.TRUCK:
+            self.costPerDistanceAndVolume = 0.42
+            self.co2PerDistanceAndVolume = 0.31
+            self.overUsePenaltyPerVolume = 0.73
 
 
 @dataclass
@@ -193,7 +183,8 @@ if __name__ == "__main__":
         for customer in customers:
             print(f"Customer ID: {customer.id}, Name: {customer.name}")
             print(f"  Max Input: {customer.max_input}")
-            print(f"  Penalties (Over/Late/Early): {customer.over_input_penalty}/{customer.late_delivery_penalty}/{customer.early_delivery_penalty}")
+            print(
+                f"  Penalties (Over/Late/Early): {customer.over_input_penalty}/{customer.late_delivery_penalty}/{customer.early_delivery_penalty}")
             print(f"  Node Type: {customer.node_type.value}")
             print("---")
 
@@ -222,7 +213,8 @@ if __name__ == "__main__":
             print(f"Refinery ID: {refinery.id}, Name: {refinery.name}")
             print(f"  Capacity: {refinery.capacity}, Max Output: {refinery.max_output}")
             print(f"  Production: {refinery.production}, Initial Stock: {refinery.initial_stock}")
-            print(f"  Penalties (Overflow/Underflow/Over Output): {refinery.overflow_penalty}/{refinery.underflow_penalty}/{refinery.over_output_penalty}")
+            print(
+                f"  Penalties (Overflow/Underflow/Over Output): {refinery.overflow_penalty}/{refinery.underflow_penalty}/{refinery.over_output_penalty}")
             print(f"  Production Cost: {refinery.production_cost}, CO2: {refinery.production_co2}")
             print(f"  Node Type: {refinery.node_type.value}")
             print("---")
@@ -234,7 +226,8 @@ if __name__ == "__main__":
             print(f"  Capacity: {tank.capacity}")
             print(f"  Max Input/Output: {tank.max_input}/{tank.max_output}")
             print(f"  Initial Stock: {tank.initial_stock}")
-            print(f"  Penalties (Overflow/Underflow/Over Input/Over Output): {tank.overflow_penalty}/{tank.underflow_penalty}/{tank.over_input_penalty}/{tank.over_output_penalty}")
+            print(
+                f"  Penalties (Overflow/Underflow/Over Input/Over Output): {tank.overflow_penalty}/{tank.underflow_penalty}/{tank.over_input_penalty}/{tank.over_output_penalty}")
             print(f"  Node Type: {tank.node_type.value}")
             print("---")
 
