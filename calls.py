@@ -3,68 +3,72 @@ import requests
 # Constants
 BASE_URL = "http://localhost:8081"
 API_KEY = "7bcd6334-bc2e-4cbf-b9d4-61cb9e868869"
-HEADERS = {
-    "Authorization": API_KEY,
-    "Content-Type": "application/json"
-}
+
+START_ENDPOINT = BASE_URL + "/api/v1/session/start"
+END_ENDPOINT = BASE_URL + "/api/v1/session/end"
+SESSION_HEADERS = {"API-KEY": API_KEY}
+
+ROUND_ENDPOINT = BASE_URL + "/api/v1/play/round"
+ROUND_HEADERS = {"API-KEY": API_KEY, "SESSION-ID": ""}
+
 session_id = None
 
 
-# 1. Start a New Session
+def update_round_headers(session_id):
+    global ROUND_HEADERS
+    ROUND_HEADERS = {"API-KEY": API_KEY, "SESSION-ID": session_id}
+
+
 def start_session():
     global session_id
-    url = f"{BASE_URL}/api/v1/session/start"
-    response = requests.post(url, headers=HEADERS)
+    response = requests.post(START_ENDPOINT, headers=SESSION_HEADERS)
 
-    if response.status_code == 200:
-        session_id = response.json().get("SESSION-ID")
-        print("Session started:", session_id)
+    if response.status_code == 409:
+        print("Connection already existed, now ending sesion\n")
+        end_session()
+        print("Trying to start session again...\n")
+        start_session()
+    elif response.status_code == 200:
+        print("Session started successfully: ")
+        session_id = response.text
+        update_round_headers(session_id)
+        print(session_id, end="\n\n")
     else:
         print("Error starting session:", response.status_code, response.text)
-        return None
 
 
-# 2. Play a Round
-def play_round(day, movements=None):
-    url = f"{BASE_URL}/api/v1/play/round"
-    round_headers = {**HEADERS, "SESSION-ID": session_id}  # Adding SESSION-ID to headers
-    data = {
-        "day": day,
-        "movements": movements or []  # Empty list if no movements provided
-    }
-
-    response = requests.post(url, headers=round_headers, json=data)
-
-    if response.status_code == 200:
-        result = response.json()
-        print(f"Day {day} Results:")
-        print("  Demands:", result.get("demands"))
-        print("  Penalties:", result.get("penalties"))
-        print("  Daily KPIs - Cost:", result["kpis"]["daily_cost"], "CO2:", result["kpis"]["daily_co2"])
-        print("  Session KPIs - Cost:", result["kpis"]["session_cost"], "CO2:", result["kpis"]["session_co2"])
-    else:
-        print(f"Error on day {day}:", response.status_code, response.text)
-
-
-# 3. End the Session
 def end_session():
-    url = f"{BASE_URL}/api/v1/session/end"
-    end_headers = {**HEADERS, "SESSION-ID": session_id}  # Adding SESSION-ID to headers
-
-    response = requests.post(url, headers=end_headers)
+    global session_id
+    response = requests.post(END_ENDPOINT, headers=SESSION_HEADERS)
 
     if response.status_code == 200:
-        print("Session ended successfully.")
-        print("Final session data:", response.json())
+        print("Session ended successfully")
+        print(response.text, end="\n\n")
+    elif response.status_code == 404:
+        print("Session does not exist")
     else:
         print("Error ending session:", response.status_code, response.text)
 
 
-# Example Usage
-if __name__ == "__main__":
-    start_session()  # Start the session
-    if session_id:
-        # Play rounds; for example, day 0 with no movements, and day 1 with example movements
-        play_round(day=0, movements=[])  # Day 0 with no movements
-        play_round(day=1, movements=[{"type": "move", "details": "example movement"}])  # Day 1 with movements
-        end_session()  # End the session
+def play_round(day=0, movements=None):
+    round_data = {
+        "day": day,
+        "movements": movements or []
+    }
+
+    response = requests.post(ROUND_ENDPOINT, headers=ROUND_HEADERS, json=round_data)
+
+    if response.status_code == 200:
+        print("Round started succesfully")
+        print(response.text, end="\n\n")
+    else:
+        print(f"Error on day {day}:", response.status_code, response.text)
+
+
+# Code to test all endpoints
+start_session()
+
+for day in range(43):
+    play_round(day=day)
+
+end_session()
