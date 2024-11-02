@@ -179,65 +179,66 @@ class DataLoader:
 
 
 # Example on how to use this
-loader = DataLoader()
-try:
-    customers = loader.load_customers()
-    demands = loader.load_demands()
-    connections = loader.load_connections()
-    refineries = loader.load_refineries()
-    tanks = loader.load_tanks()
+if __name__ == "__main__":
+    loader = DataLoader()
+    try:
+        customers = loader.load_customers()
+        demands = loader.load_demands()
+        connections = loader.load_connections()
+        refineries = loader.load_refineries()
+        tanks = loader.load_tanks()
 
-    print("\n=== Customers ===")
-    print(f"Total customers: {len(customers)}")
-    for customer in customers:
-        print(f"Customer ID: {customer.id}, Name: {customer.name}")
-        print(f"  Max Input: {customer.max_input}")
-        print(f"  Penalties (Over/Late/Early): {customer.over_input_penalty}/{customer.late_delivery_penalty}/{customer.early_delivery_penalty}")
-        print(f"  Node Type: {customer.node_type.value}")
-        print("---")
+        print("\n=== Customers ===")
+        print(f"Total customers: {len(customers)}")
+        for customer in customers:
+            print(f"Customer ID: {customer.id}, Name: {customer.name}")
+            print(f"  Max Input: {customer.max_input}")
+            print(f"  Penalties (Over/Late/Early): {customer.over_input_penalty}/{customer.late_delivery_penalty}/{customer.early_delivery_penalty}")
+            print(f"  Node Type: {customer.node_type.value}")
+            print("---")
 
-    print("\n=== Demands ===")
-    print(f"Total demands: {len(demands)}")
-    for demand in demands:
-        print(f"Demand ID: {demand.id}")
-        print(f"  Customer ID: {demand.customer_id}")
-        print(f"  Quantity: {demand.quantity}")
-        print(f"  Post Day: {demand.post_day}")
-        print(f"  Delivery Window: {demand.start_delivery_day} - {demand.end_delivery_day}")
-        print("---")
+        print("\n=== Demands ===")
+        print(f"Total demands: {len(demands)}")
+        for demand in demands:
+            print(f"Demand ID: {demand.id}")
+            print(f"  Customer ID: {demand.customer_id}")
+            print(f"  Quantity: {demand.quantity}")
+            print(f"  Post Day: {demand.post_day}")
+            print(f"  Delivery Window: {demand.start_delivery_day} - {demand.end_delivery_day}")
+            print("---")
 
-    print("\n=== Connections Dictionary ===")
-    print(f"Total connections: {len(connections)}")
-    for (from_id, to_id, connection_type), conn in connections.items():
-        print(f"Connection from {from_id} to {to_id}:")
-        print(f"  Connection ID: {conn.id}")
-        print(f"  Distance: {conn.distance}, Lead Time: {conn.lead_time_days} days")
-        print(f"  Type: {conn.connection_type.value}, Max Capacity: {conn.max_capacity}")
-        print("---")
+        print("\n=== Connections Dictionary ===")
+        print(f"Total connections: {len(connections)}")
+        for (from_id, to_id, connection_type), conn in connections.items():
+            print(f"Connection from {from_id} to {to_id}:")
+            print(f"  Connection ID: {conn.id}")
+            print(f"  Distance: {conn.distance}, Lead Time: {conn.lead_time_days} days")
+            print(f"  Type: {conn.connection_type.value}, Max Capacity: {conn.max_capacity}")
+            print("---")
 
-    print("\n=== Refineries ===")
-    print(f"Total refineries: {len(refineries)}")
-    for refinery in refineries:
-        print(f"Refinery ID: {refinery.id}, Name: {refinery.name}")
-        print(f"  Capacity: {refinery.capacity}, Max Output: {refinery.max_output}")
-        print(f"  Production: {refinery.production}, Initial Stock: {refinery.initial_stock}")
-        print(f"  Penalties (Overflow/Underflow/Over Output): {refinery.overflow_penalty}/{refinery.underflow_penalty}/{refinery.over_output_penalty}")
-        print(f"  Production Cost: {refinery.production_cost}, CO2: {refinery.production_co2}")
-        print(f"  Node Type: {refinery.node_type.value}")
-        print("---")
+        print("\n=== Refineries ===")
+        print(f"Total refineries: {len(refineries)}")
+        for refinery in refineries:
+            print(f"Refinery ID: {refinery.id}, Name: {refinery.name}")
+            print(f"  Capacity: {refinery.capacity}, Max Output: {refinery.max_output}")
+            print(f"  Production: {refinery.production}, Initial Stock: {refinery.initial_stock}")
+            print(f"  Penalties (Overflow/Underflow/Over Output): {refinery.overflow_penalty}/{refinery.underflow_penalty}/{refinery.over_output_penalty}")
+            print(f"  Production Cost: {refinery.production_cost}, CO2: {refinery.production_co2}")
+            print(f"  Node Type: {refinery.node_type.value}")
+            print("---")
 
-    print("\n=== Tanks ===")
-    print(f"Total tanks: {len(tanks)}")
-    for tank in tanks:
-        print(f"Tank ID: {tank.id}, Name: {tank.name}")
-        print(f"  Capacity: {tank.capacity}")
-        print(f"  Max Input/Output: {tank.max_input}/{tank.max_output}")
-        print(f"  Initial Stock: {tank.initial_stock}")
-        print(f"  Penalties (Overflow/Underflow/Over Input/Over Output): {tank.overflow_penalty}/{tank.underflow_penalty}/{tank.over_input_penalty}/{tank.over_output_penalty}")
-        print(f"  Node Type: {tank.node_type.value}")
-        print("---")
+        print("\n=== Tanks ===")
+        print(f"Total tanks: {len(tanks)}")
+        for tank in tanks:
+            print(f"Tank ID: {tank.id}, Name: {tank.name}")
+            print(f"  Capacity: {tank.capacity}")
+            print(f"  Max Input/Output: {tank.max_input}/{tank.max_output}")
+            print(f"  Initial Stock: {tank.initial_stock}")
+            print(f"  Penalties (Overflow/Underflow/Over Input/Over Output): {tank.overflow_penalty}/{tank.underflow_penalty}/{tank.over_input_penalty}/{tank.over_output_penalty}")
+            print(f"  Node Type: {tank.node_type.value}")
+            print("---")
 
-except FileNotFoundError as e:
-    print(f"Error: Could not find CSV file - {e}")
-except Exception as e:
-    print(f"Error loading data: {e}")
+    except FileNotFoundError as e:
+        print(f"Error: Could not find CSV file - {e}")
+    except Exception as e:
+        print(f"Error loading data: {e}")
