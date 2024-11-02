@@ -129,17 +129,20 @@ class DataLoader:
             end_delivery_day=int(row.end_delivery_day)
         ) for _, row in df.iterrows()]
 
-    def load_connections(self) -> List[Connection]:
+    def load_connections(self) -> dict:
         df = pd.read_csv(self.data_folder / "connections.csv", sep=";")
-        return [Connection(
-            id=str(row.id),
-            from_id=str(row.from_id),
-            to_id=str(row.to_id),
-            distance=int(row.distance),
-            lead_time_days=int(row.lead_time_days),
-            connection_type=ConnectionType(row.connection_type),
-            max_capacity=int(row.max_capacity)
-        ) for _, row in df.iterrows()]
+        return {
+            (str(row.from_id), str(row.to_id), str(ConnectionType(row.connection_type))): Connection(
+                id=str(row.id),
+                from_id=str(row.from_id),
+                to_id=str(row.to_id),
+                distance=int(row.distance),
+                lead_time_days=int(row.lead_time_days),
+                connection_type=ConnectionType(row.connection_type),
+                max_capacity=int(row.max_capacity)
+            )
+            for _, row in df.iterrows()
+        }
 
     def load_refineries(self) -> List[Refinery]:
         df = pd.read_csv(self.data_folder / "refineries.csv", sep=";")
@@ -203,11 +206,11 @@ try:
         print(f"  Delivery Window: {demand.start_delivery_day} - {demand.end_delivery_day}")
         print("---")
 
-    print("\n=== Connections ===")
+    print("\n=== Connections Dictionary ===")
     print(f"Total connections: {len(connections)}")
-    for conn in connections:
-        print(f"Connection ID: {conn.id}")
-        print(f"  From {conn.from_id} to {conn.to_id}")
+    for (from_id, to_id, connection_type), conn in connections.items():
+        print(f"Connection from {from_id} to {to_id}:")
+        print(f"  Connection ID: {conn.id}")
         print(f"  Distance: {conn.distance}, Lead Time: {conn.lead_time_days} days")
         print(f"  Type: {conn.connection_type.value}, Max Capacity: {conn.max_capacity}")
         print("---")
