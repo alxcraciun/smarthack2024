@@ -1,5 +1,3 @@
-# Aici bag eu importul la CSV
-
 import pandas as pd
 from dataclasses import dataclass
 from typing import List
@@ -19,27 +17,6 @@ class ConnectionType(Enum):
 
 
 @dataclass
-class TransportConfig:
-    costPerDistanceAndVolume: float
-    co2PerDistanceAndVolume: float
-    overUsePenaltyPerVolume: float
-
-
-class TransportConfigs:
-    PIPELINE = TransportConfig(
-        costPerDistanceAndVolume=0.05,
-        co2PerDistanceAndVolume=0.02,
-        overUsePenaltyPerVolume=1.13
-    )
-
-    TRUCK = TransportConfig(
-        costPerDistanceAndVolume=0.42,
-        co2PerDistanceAndVolume=0.31,
-        overUsePenaltyPerVolume=0.73
-    )
-
-
-@dataclass
 class Customer:
     id: str
     name: str
@@ -48,6 +25,13 @@ class Customer:
     late_delivery_penalty: float
     early_delivery_penalty: float
     node_type: NodeType
+
+    def __str__(self) -> str:
+        return (f"Customer ID: {self.id}, Name: {self.name}\n"
+                f"  Max Input: {self.max_input}\n"
+                f"  Penalties (Over/Late/Early): {self.over_input_penalty}/{self.late_delivery_penalty}/{self.early_delivery_penalty}\n"
+                f"  Node Type: {self.node_type.value}\n"
+                f"---")
 
 
 @dataclass
@@ -59,6 +43,14 @@ class Demand:
     start_delivery_day: int
     end_delivery_day: int
 
+    def __str__(self) -> str:
+        return (f"Demand ID: {self.id}\n"
+                f"  Customer ID: {self.customer_id}\n"
+                f"  Quantity: {self.quantity}\n"
+                f"  Post Day: {self.post_day}\n"
+                f"  Delivery Window: {self.start_delivery_day} - {self.end_delivery_day}\n"
+                f"---")
+
 
 @dataclass
 class Connection:
@@ -69,6 +61,26 @@ class Connection:
     lead_time_days: int
     connection_type: ConnectionType
     max_capacity: int
+    costPerDistanceAndVolume: float = 0.0
+    co2PerDistanceAndVolume: float = 0.0
+    overUsePenaltyPerVolume: float = 0.0
+
+    def __post_init__(self):
+        if self.connection_type == ConnectionType.PIPELINE:
+            self.costPerDistanceAndVolume = 0.05
+            self.co2PerDistanceAndVolume = 0.02
+            self.overUsePenaltyPerVolume = 1.13
+        elif self.connection_type == ConnectionType.TRUCK:
+            self.costPerDistanceAndVolume = 0.42
+            self.co2PerDistanceAndVolume = 0.31
+            self.overUsePenaltyPerVolume = 0.73
+
+    def __str__(self) -> str:
+        return (f"Connection from {self.from_id} to {self.to_id}:\n"
+                f"  Connection ID: {self.id}\n"
+                f"  Distance: {self.distance}, Lead Time: {self.lead_time_days} days\n"
+                f"  Type: {self.connection_type.value}, Max Capacity: {self.max_capacity}\n"
+                f"---")
 
 
 @dataclass
@@ -86,6 +98,15 @@ class Refinery:
     initial_stock: int
     node_type: NodeType
 
+    def __str__(self) -> str:
+        return (f"Refinery ID: {self.id}, Name: {self.name}\n"
+                f"  Capacity: {self.capacity}, Max Output: {self.max_output}\n"
+                f"  Production: {self.production}, Initial Stock: {self.initial_stock}\n"
+                f"  Penalties (Overflow/Underflow/Over Output): {self.overflow_penalty}/{self.underflow_penalty}/{self.over_output_penalty}\n"
+                f"  Production Cost: {self.production_cost}, CO2: {self.production_co2}\n"
+                f"  Node Type: {self.node_type.value}\n"
+                f"---")
+
 
 @dataclass
 class Tank:
@@ -100,6 +121,15 @@ class Tank:
     over_output_penalty: float
     initial_stock: int
     node_type: NodeType
+
+    def __str__(self) -> str:
+        return (f"Tank ID: {self.id}, Name: {self.name}\n"
+                f"  Capacity: {self.capacity}\n"
+                f"  Max Input/Output: {self.max_input}/{self.max_output}\n"
+                f"  Initial Stock: {self.initial_stock}\n"
+                f"  Penalties (Overflow/Underflow/Over Input/Over Output): {self.overflow_penalty}/{self.underflow_penalty}/{self.over_input_penalty}/{self.over_output_penalty}\n"
+                f"  Node Type: {self.node_type.value}\n"
+                f"---")
 
 
 class DataLoader:
@@ -178,7 +208,6 @@ class DataLoader:
         ) for _, row in df.iterrows()]
 
 
-# Example on how to use this
 if __name__ == "__main__":
     loader = DataLoader()
     try:
@@ -191,52 +220,27 @@ if __name__ == "__main__":
         print("\n=== Customers ===")
         print(f"Total customers: {len(customers)}")
         for customer in customers:
-            print(f"Customer ID: {customer.id}, Name: {customer.name}")
-            print(f"  Max Input: {customer.max_input}")
-            print(f"  Penalties (Over/Late/Early): {customer.over_input_penalty}/{customer.late_delivery_penalty}/{customer.early_delivery_penalty}")
-            print(f"  Node Type: {customer.node_type.value}")
-            print("---")
+            print(customer)
 
         print("\n=== Demands ===")
         print(f"Total demands: {len(demands)}")
         for demand in demands:
-            print(f"Demand ID: {demand.id}")
-            print(f"  Customer ID: {demand.customer_id}")
-            print(f"  Quantity: {demand.quantity}")
-            print(f"  Post Day: {demand.post_day}")
-            print(f"  Delivery Window: {demand.start_delivery_day} - {demand.end_delivery_day}")
-            print("---")
+            print(demand)
 
-        print("\n=== Connections Dictionary ===")
+        print("\n=== Connections ===")
         print(f"Total connections: {len(connections)}")
-        for (from_id, to_id, connection_type), conn in connections.items():
-            print(f"Connection from {from_id} to {to_id}:")
-            print(f"  Connection ID: {conn.id}")
-            print(f"  Distance: {conn.distance}, Lead Time: {conn.lead_time_days} days")
-            print(f"  Type: {conn.connection_type.value}, Max Capacity: {conn.max_capacity}")
-            print("---")
+        for conn in connections.values():
+            print(conn)
 
         print("\n=== Refineries ===")
         print(f"Total refineries: {len(refineries)}")
         for refinery in refineries:
-            print(f"Refinery ID: {refinery.id}, Name: {refinery.name}")
-            print(f"  Capacity: {refinery.capacity}, Max Output: {refinery.max_output}")
-            print(f"  Production: {refinery.production}, Initial Stock: {refinery.initial_stock}")
-            print(f"  Penalties (Overflow/Underflow/Over Output): {refinery.overflow_penalty}/{refinery.underflow_penalty}/{refinery.over_output_penalty}")
-            print(f"  Production Cost: {refinery.production_cost}, CO2: {refinery.production_co2}")
-            print(f"  Node Type: {refinery.node_type.value}")
-            print("---")
+            print(refinery)
 
         print("\n=== Tanks ===")
         print(f"Total tanks: {len(tanks)}")
         for tank in tanks:
-            print(f"Tank ID: {tank.id}, Name: {tank.name}")
-            print(f"  Capacity: {tank.capacity}")
-            print(f"  Max Input/Output: {tank.max_input}/{tank.max_output}")
-            print(f"  Initial Stock: {tank.initial_stock}")
-            print(f"  Penalties (Overflow/Underflow/Over Input/Over Output): {tank.overflow_penalty}/{tank.underflow_penalty}/{tank.over_input_penalty}/{tank.over_output_penalty}")
-            print(f"  Node Type: {tank.node_type.value}")
-            print("---")
+            print(tank)
 
     except FileNotFoundError as e:
         print(f"Error: Could not find CSV file - {e}")
