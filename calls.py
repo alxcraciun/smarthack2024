@@ -86,11 +86,11 @@ def main():
     client = GameAPIClient()
     client.start_session()
 
-    try:
-        for day in range(43):
-            print(client.play_round(day=day))
-    finally:
-        client.end_session()
+    # try:
+    for day in range(43):
+        print(client.play_round(day=day))
+    # finally:
+        # client.end_session()
 
 
 if __name__ == "__main__":
