@@ -144,7 +144,7 @@ class GameSimulator:
 
         try:
             new_demands = []
-            for day in range(42):
+            for day in range(43):
                 # Update refinery inventory with daily production
                 for refinery in self.refineries.values():
                     self.inventory[refinery.id] += refinery.production
