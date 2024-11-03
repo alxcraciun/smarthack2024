@@ -1,6 +1,3 @@
-import datetime
-import random
-
 import pandas as pd
 from dataclasses import dataclass
 from typing import List
@@ -210,22 +207,6 @@ class DataLoader:
             node_type=NodeType(row.node_type)
         ) for _, row in df.iterrows()]
 
-def generate_daily_demands(demands: List[Demand], current_day: int) -> List[Demand]:
-    new_demands = []
-    #print(demands)
-    for demand in demands:
-        #print(demand.start_delivery_day, current_day)
-        if demand.start_delivery_day == current_day:
-            new_demand = {
-                "id": demand.id,
-                "customerId": demand.customer_id,
-                "quantity": demand.quantity,
-                "post_day": demand.post_day,
-                "start_delivery_day": demand.start_delivery_day,
-                "end_delivery_day": demand.end_delivery_day
-            }
-            new_demands.append(new_demand)
-    return new_demands
 
 if __name__ == "__main__":
     loader = DataLoader()
@@ -260,12 +241,6 @@ if __name__ == "__main__":
         print(f"Total tanks: {len(tanks)}")
         for tank in tanks:
             print(tank)
-
-        print("\n=== Daily Demands ===")
-        daily_demands = generate_daily_demands(demands, 12)
-        print(f"Total daily demands for day 0: {len(daily_demands)}")
-        for demand in daily_demands:
-            print(demand)
 
     except FileNotFoundError as e:
         print(f"Error: Could not find CSV file - {e}")

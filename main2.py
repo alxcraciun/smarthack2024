@@ -1,4 +1,4 @@
-from data import DataLoader, generate_daily_demands
+from data import DataLoader
 from calls import GameAPIClient
 from collections import defaultdict
 
@@ -26,12 +26,12 @@ class GameSimulator:
 
     def compute_migrations(self, day: int, new_demands: list) -> list:
         migrations = []
-        print(f"New demands for day {day}: {new_demands}")
+
         # Add new demands to active demands list
         self.active_demands.extend(new_demands)
 
         # Sort demands by urgency (closest deadline first)
-        self.active_demands.sort(key=lambda x: x['end_delivery_day'])
+        self.active_demands.sort(key=lambda x: x['endDay'])
 
         # 1. First, handle moving product from refineries to tanks
         for refinery_id, refinery in self.refineries.items():
@@ -64,13 +64,12 @@ class GameSimulator:
                     })
                     self.inventory[refinery_id] -= available
 
-        #print(f"Active Demands:{self.active_demands}")
         # 2. Then handle customer demands
         for demand in self.active_demands[:]:
             customer_id = demand['customerId']
-            amount_needed = demand['quantity']
+            amount_needed = demand['amount']
 
-            if day < demand['start_delivery_day']:
+            if day < demand['startDay']:
                 continue
 
             for tank_id, tank in self.tanks.items():
@@ -126,11 +125,8 @@ class GameSimulator:
 
                 # Compute migrations for the day
                 migrations = []
-                demands = DataLoader().load_demands()
                 if day > 0:  # On day 0, we just observe
-                    new_demands = generate_daily_demands(demands, day)
-                    migrations = self.compute_migrations(day, new_demands)
-                    #print(migrations)
+                    migrations = self.compute_migrations(day, [])
 
                 # Send migrations and get response
                 response = self.client.play_round(day=day, movements=migrations)
@@ -150,7 +146,7 @@ class GameSimulator:
 
                 # Update active demands and add new ones
                 new_demands = response.get('demand', [])
-                self.active_demands = [d for d in self.active_demands if d['end_delivery_day'] >= day]
+                self.active_demands = [d for d in self.active_demands if d['endDay'] >= day]
 
         finally:
             self.client.end_session()
