@@ -1,6 +1,7 @@
 from data import DataLoader
 from calls import GameAPIClient
 from collections import defaultdict
+from queue import PriorityQueue
 
 
 class GameSimulator:
@@ -31,6 +32,7 @@ class GameSimulator:
         self.active_demands.extend(new_demands)
 
         # Sort demands by urgency (closest deadline first)
+        #TODO nu stiu de ce, am comentat linia asta si a dat un pic mai bine scorul
         self.active_demands.sort(key=lambda x: x['endDay'])
 
         # 1. First, handle moving product from refineries to tanks
@@ -74,6 +76,7 @@ class GameSimulator:
             if day < demand['startDay']:
                 continue
             #TODO idee de optimizare: luat tankurile care au conexiune de cost minim
+            tank_pq = PriorityQueue()
             for tank_id, tank in self.tanks.items():
                 if self.inventory[tank_id] <= 0:
                     continue
@@ -96,18 +99,39 @@ class GameSimulator:
                     self.customers[customer_id].max_input
                 )
                 if available > 0:
-                    migrations.append({
-                        "from_id": tank_id,
-                        "to_id": customer_id,
-                        "amount": int(available),
-                        "connection_type": "TRUCK"
-                    })
-                    self.inventory[tank_id] -= available
-                    amount_needed -= available
-                    if amount_needed <= 0:
-                        self.active_demands.remove(demand)
-                        break
-
+                    tank_pq.put((-available/connection.distance, (tank_id, available)))
+                    # migrations.append({
+                    #     "from_id": tank_id,
+                    #     "to_id": customer_id,
+                    #     "amount": int(available),
+                    #     "connection_type": "TRUCK"
+                    # })
+                    # self.inventory[tank_id] -= available
+                    # amount_needed -= available
+                    # if amount_needed <= 0:
+                    #     self.active_demands.remove(demand)
+                    #     break
+            while not tank_pq.empty():
+                factor, (tank_id, available) = tank_pq.get()
+                # print(factor)
+                if available > amount_needed:
+                    available = amount_needed
+                migrations.append({
+                    "from_id": tank_id,
+                    "to_id": customer_id,
+                    "amount": int(available),
+                    "connection_type": "TRUCK"
+                })
+                self.inventory[tank_id] -= available
+                amount_needed -= available
+                if amount_needed <= 0:
+                    self.active_demands.remove(demand)
+                    break
+            if amount_needed > 0:
+                updated_demand = demand
+                updated_demand["amount"] = amount_needed
+                self.active_demands.remove(demand)
+                self.active_demands.append(updated_demand)
         return migrations
 
     def run(self):
