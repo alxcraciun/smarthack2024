@@ -32,11 +32,9 @@ class GameSimulator:
         self.active_demands.extend(new_demands)
 
         # Sort demands by urgency (closest deadline first)
-        #TODO nu stiu de ce, am comentat linia asta si a dat un pic mai bine scorul
         self.active_demands.sort(key=lambda x: x['endDay'])
 
         # 1. First, handle moving product from refineries to tanks
-        #TODO oare daca exista tankuri fara conexiune la vreo rafinarie, o sa ramana goale?
         for refinery_id, refinery in self.refineries.items():
             if self.inventory[refinery_id] <= 0:
                 continue
@@ -72,10 +70,8 @@ class GameSimulator:
             customer_id = demand['customerId']
             amount_needed = demand['amount']
 
-            #TODO hmm, nu stiu
             if day < demand['startDay']:
                 continue
-            #TODO idee de optimizare: luat tankurile care au conexiune de cost minim
             tank_pq = PriorityQueue()
             for tank_id, tank in self.tanks.items():
                 if self.inventory[tank_id] <= 0:
@@ -87,30 +83,23 @@ class GameSimulator:
 
                 connection = self.connections[connection_key]
 
-                delivery_time = day + connection.lead_time_days
-                #TODO oare sa tratam cazul cand niciun tank nu poate trimite la timp?
-                if delivery_time > demand['endDay']:
-                    continue
-
                 available = min(
                     self.inventory[tank_id],
                     connection.max_capacity,
                     amount_needed,
                     self.customers[customer_id].max_input
                 )
+
+                delivery_time = day + connection.lead_time_days
+
                 if available > 0:
-                    tank_pq.put((-available/connection.distance, (tank_id, available)))
-                    # migrations.append({
-                    #     "from_id": tank_id,
-                    #     "to_id": customer_id,
-                    #     "amount": int(available),
-                    #     "connection_type": "TRUCK"
-                    # })
-                    # self.inventory[tank_id] -= available
-                    # amount_needed -= available
-                    # if amount_needed <= 0:
-                    #     self.active_demands.remove(demand)
-                    #     break
+                    if delivery_time > demand['endDay']:
+                        # if delivery_time <= 42:
+                        #     tank_pq.put((100000 - (delivery_time-demand["endDay"]), (tank_id, available)))
+                        continue
+                    else:
+                        tank_pq.put((-available/connection.distance, (tank_id, available)))
+
             while not tank_pq.empty():
                 factor, (tank_id, available) = tank_pq.get()
                 # print(factor)
@@ -127,6 +116,7 @@ class GameSimulator:
                 if amount_needed <= 0:
                     self.active_demands.remove(demand)
                     break
+
             if amount_needed > 0:
                 updated_demand = demand
                 updated_demand["amount"] = amount_needed
@@ -144,7 +134,7 @@ class GameSimulator:
 
         try:
             new_demands = []
-            for day in range(42):
+            for day in range(43):
                 # Update refinery inventory with daily production
                 for refinery in self.refineries.values():
                     self.inventory[refinery.id] += refinery.production
@@ -172,7 +162,6 @@ class GameSimulator:
 
                 # Update active demands and add new ones
                 new_demands = response.get('demand', [])
-                #TODO nu stiu daca ar trebui sa aruncam demand-urile intarziate - Paul. Am rulat si fara, dar nu e diferenta de scor
                 self.active_demands = [d for d in self.active_demands if d['endDay'] >= day]
 
         finally:
