@@ -20,3 +20,11 @@ Modify port if you can't use 8080:
 
 Don't forget to run with local profile 
 <br> `mvn spring-boot:run -D spring-boot.run.profiles=local`
+
+<br>
+
+### Which localhost ports are used? 
+
+- 8081: Run Springboot Evaluator
+- 3001: Run Vite+React frontend
+- 9000: FastAPI Server that logs requests + responses

@@ -2,6 +2,51 @@ from data import DataLoader
 from calls import GameAPIClient
 from collections import defaultdict
 from queue import PriorityQueue
+import json
+
+
+class DailySummary:
+    def __init__(self, day, migrations, response):
+        self.day = day
+        self.migrations_count = len(migrations)
+        self.demands_count = len(response.get('demand', []))
+        self.daily_cost = response['deltaKpis']['cost']
+        self.daily_co2 = response['deltaKpis']['co2']
+        self.total_cost = response['totalKpis']['cost']
+        self.total_co2 = response['totalKpis']['co2']
+
+        # Store as JSON for potential later use
+        self.summary = {
+            "day": day,
+            "migrations": {
+                "count": self.migrations_count
+            },
+            "demands": {
+                "count": self.demands_count
+            },
+            "kpis": {
+                "daily": {
+                    "cost": round(self.daily_cost, 2),
+                    "co2": round(self.daily_co2, 2)
+                },
+                "total": {
+                    "cost": round(self.total_cost, 2),
+                    "co2": round(self.total_co2, 2)
+                }
+            }
+        }
+
+    def __str__(self):
+        return (
+            f"\nDay {self.day}:\n"
+            f"Migrations sent: {self.migrations_count}\n"
+            f"New demands received: {self.demands_count}\n"
+            f"Daily KPIs - Cost: {self.daily_cost:.2f}, CO2: {self.daily_co2:.2f}\n"
+            f"Total KPIs - Cost: {self.total_cost:.2f}, CO2: {self.total_co2:.2f}"
+        )
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class GameSimulator:
@@ -9,6 +54,7 @@ class GameSimulator:
         self.loader = DataLoader()
         self.client = GameAPIClient()
         self.setup_data()
+        self.logger = []
 
     def setup_data(self):
         self.customers = {c.id: c for c in self.loader.load_customers()}
@@ -32,11 +78,11 @@ class GameSimulator:
         self.active_demands.extend(new_demands)
 
         # Sort demands by urgency (closest deadline first)
-        #TODO nu stiu de ce, am comentat linia asta si a dat un pic mai bine scorul
+        # TODO nu stiu de ce, am comentat linia asta si a dat un pic mai bine scorul
         self.active_demands.sort(key=lambda x: x['endDay'])
 
         # 1. First, handle moving product from refineries to tanks
-        #TODO oare daca exista tankuri fara conexiune la vreo rafinarie, o sa ramana goale?
+        # TODO oare daca exista tankuri fara conexiune la vreo rafinarie, o sa ramana goale?
         for refinery_id, refinery in self.refineries.items():
             if self.inventory[refinery_id] <= 0:
                 continue
@@ -72,10 +118,10 @@ class GameSimulator:
             customer_id = demand['customerId']
             amount_needed = demand['amount']
 
-            #TODO hmm, nu stiu
+            # TODO hmm, nu stiu
             if day < demand['startDay']:
                 continue
-            #TODO idee de optimizare: luat tankurile care au conexiune de cost minim
+            # TODO idee de optimizare: luat tankurile care au conexiune de cost minim
             tank_pq = PriorityQueue()
             for tank_id, tank in self.tanks.items():
                 if self.inventory[tank_id] <= 0:
@@ -88,7 +134,7 @@ class GameSimulator:
                 connection = self.connections[connection_key]
 
                 delivery_time = day + connection.lead_time_days
-                #TODO oare sa tratam cazul cand niciun tank nu poate trimite la timp?
+                # TODO oare sa tratam cazul cand niciun tank nu poate trimite la timp?
                 if delivery_time > demand['endDay']:
                     continue
 
@@ -99,7 +145,7 @@ class GameSimulator:
                     self.customers[customer_id].max_input
                 )
                 if available > 0:
-                    tank_pq.put((-available/connection.distance, (tank_id, available)))
+                    tank_pq.put((-available / connection.distance, (tank_id, available)))
                     # migrations.append({
                     #     "from_id": tank_id,
                     #     "to_id": customer_id,
@@ -161,23 +207,20 @@ class GameSimulator:
                     print(f"Failed to get response for day {day}")
                     continue
 
-                # Simple daily summary
-                print(f"\nDay {day}:")
-                print(f"Migrations sent: {len(migrations)}")
-                print(f"New demands received: {len(response.get('demand', []))}")
-                print(
-                    f"Daily KPIs - Cost: {response['deltaKpis']['cost']:.2f}, CO2: {response['deltaKpis']['co2']:.2f}")
-                print(
-                    f"Total KPIs - Cost: {response['totalKpis']['cost']:.2f}, CO2: {response['totalKpis']['co2']:.2f}")
+                daily_summary = DailySummary(day, migrations, response)
+                print(daily_summary)
+                self.logger.append(daily_summary)
 
                 # Update active demands and add new ones
                 new_demands = response.get('demand', [])
-                #TODO nu stiu daca ar trebui sa aruncam demand-urile intarziate - Paul. Am rulat si fara, dar nu e diferenta de scor
+                # TODO nu stiu daca ar trebui sa aruncam demand-urile intarziate - Paul. Am rulat si fara, dar nu e diferenta de scor
                 self.active_demands = [d for d in self.active_demands if d['endDay'] >= day]
 
         finally:
             self.client.end_session()
             print("\nGame simulation completed")
+
+        return self.logger
 
 
 def main():
