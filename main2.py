@@ -42,7 +42,7 @@ class GameSimulator:
                 if self.inventory[tank_id] >= tank.capacity * 0.5:
                     continue
 
-                connection_key = (refinery_id, tank_id, "PIPELINE")
+                connection_key = (refinery_id, tank_id, "ConnectionType.PIPELINE")
                 if connection_key not in self.connections:
                     continue
 
@@ -76,7 +76,7 @@ class GameSimulator:
                 if self.inventory[tank_id] <= 0:
                     continue
 
-                connection_key = (tank_id, customer_id, "TRUCK")
+                connection_key = (tank_id, customer_id, "ConnectionType.TRUCK")
                 if connection_key not in self.connections:
                     continue
 
@@ -92,7 +92,6 @@ class GameSimulator:
                     amount_needed,
                     self.customers[customer_id].max_input
                 )
-
                 if available > 0:
                     migrations.append({
                         "from_id": tank_id,
@@ -118,6 +117,7 @@ class GameSimulator:
             return
 
         try:
+            new_demands = []
             for day in range(42):
                 # Update refinery inventory with daily production
                 for refinery in self.refineries.values():
@@ -126,7 +126,7 @@ class GameSimulator:
                 # Compute migrations for the day
                 migrations = []
                 if day > 0:  # On day 0, we just observe
-                    migrations = self.compute_migrations(day, [])
+                    migrations = self.compute_migrations(day, new_demands)
 
                 # Send migrations and get response
                 response = self.client.play_round(day=day, movements=migrations)
