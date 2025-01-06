@@ -106,10 +106,11 @@ class GameSimulator:
 
                 if available > 0:
                     migrations.append({
-                        "from_id": refinery_id,
-                        "to_id": tank_id,
-                        "amount": int(available),
-                        "connection_type": "PIPELINE"
+                        "connectionId": connection.id,
+                        # "from_id": refinery_id,
+                        # "to_id": tank_id,
+                        "amount": int(available)
+                        # "connection_type": "PIPELINE"
                     })
                     self.inventory[refinery_id] -= available
 
@@ -163,10 +164,11 @@ class GameSimulator:
                 if available > amount_needed:
                     available = amount_needed
                 migrations.append({
-                    "from_id": tank_id,
-                    "to_id": customer_id,
-                    "amount": int(available),
-                    "connection_type": "TRUCK"
+                    "connectionId": connection.id,
+                    # "from_id": refinery_id,
+                    # "to_id": tank_id,
+                    "amount": int(available)
+                    # "connection_type": "PIPELINE"
                 })
                 self.inventory[tank_id] -= available
                 amount_needed -= available
@@ -202,6 +204,8 @@ class GameSimulator:
 
                 # Send migrations and get response
                 response = self.client.play_round(day=day, movements=migrations)
+                print(migrations)
+                print(response)
 
                 if not response:
                     print(f"Failed to get response for day {day}")

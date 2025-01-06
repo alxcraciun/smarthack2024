@@ -148,16 +148,16 @@ class DataLoader:
             node_type=NodeType(row.node_type)
         ) for _, row in df.iterrows()]
 
-    def load_demands(self) -> List[Demand]:
-        df = pd.read_csv(self.data_folder / "demands.csv", sep=";")
-        return [Demand(
-            id=str(row.id),
-            customer_id=str(row.customer_id),
-            quantity=int(row.quantity),
-            post_day=int(row.post_day),
-            start_delivery_day=int(row.start_delivery_day),
-            end_delivery_day=int(row.end_delivery_day)
-        ) for _, row in df.iterrows()]
+    # def load_demands(self) -> List[Demand]:
+    #     df = pd.read_csv(self.data_folder / "demands.csv", sep=";")
+    #     return [Demand(
+    #         id=str(row.id),
+    #         customer_id=str(row.customer_id),
+    #         quantity=int(row.quantity),
+    #         post_day=int(row.post_day),
+    #         start_delivery_day=int(row.start_delivery_day),
+    #         end_delivery_day=int(row.end_delivery_day)
+    #     ) for _, row in df.iterrows()]
 
     def load_connections(self) -> dict:
         df = pd.read_csv(self.data_folder / "connections.csv", sep=";")
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     loader = DataLoader()
     try:
         customers = loader.load_customers()
-        demands = loader.load_demands()
+        # demands = loader.load_demands()
         connections = loader.load_connections()
         refineries = loader.load_refineries()
         tanks = loader.load_tanks()
@@ -222,10 +222,10 @@ if __name__ == "__main__":
         for customer in customers:
             print(customer)
 
-        print("\n=== Demands ===")
-        print(f"Total demands: {len(demands)}")
-        for demand in demands:
-            print(demand)
+        # print("\n=== Demands ===")
+        # print(f"Total demands: {len(demands)}")
+        # for demand in demands:
+        #     print(demand)
 
         print("\n=== Connections ===")
         print(f"Total connections: {len(connections)}")

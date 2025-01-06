@@ -1,0 +1,23 @@
+meta {
+  name: PLAY_ROUND
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8081/api/v1/play/round
+  body: json
+  auth: none
+}
+
+headers {
+  API-KEY: 7bcd6334-bc2e-4cbf-b9d4-61cb9e868869
+  SESSION-ID: 201901aa-073e-4bf6-82ed-09b382105d5a
+}
+
+body:json {
+  {
+    "day": 0,
+    "movements": []
+  }
+}

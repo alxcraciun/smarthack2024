@@ -3,7 +3,7 @@ import json
 
 
 class GameAPIClient:
-    def __init__(self, base_url="http://localhost:8081", api_key="7bcd6334-bc2e-4cbf-b9d4-61cb9e868869"):
+    def __init__(self, base_url="https://smarthack2024-eval.cfapps.eu12.hana.ondemand.com", api_key="0057198d-785c-450d-986f-ac3332b7c42c"):
         self.base_url = base_url.rstrip('/')
         self.api_key = api_key
         self.session_id = None
